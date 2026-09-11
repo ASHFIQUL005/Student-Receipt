@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Student Receipt & Attendance Generator</title>
+
+<!-- Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#f3f6fb;
+    color:#172033;
+}
+
+header{
+    background:#183b73;
+    color:white;
+    padding:22px;
+    text-align:center;
+}
+
+header h1{
+    margin:0;
+    font-size:26px;
+}
+
+header p{
+    margin:7px 0 0;
+    opacity:.9;
+}
+
+.container{
+    max-width:1150px;
+    margin:25px auto;
+    padding:0 15px;
+}
+
+.card{
+    background:white;
+    border-radius:14px;
+    padding:22px;
+    margin-bottom:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
+}
+
+.card h2{
+    margin-top:0;
+    color:#183b73;
+}
+
+label{
+    display:block;
+    font-weight:bold;
+    margin-top:13px;
+    margin-bottom:6px;
+}
+
+input, textarea, select{
+    width:100%;
+    padding:11px;
+    border:1px solid #ccd4e0;
+    border-radius:8px;
+    font-size:15px;
+}
+
+textarea{
+    min-height:80px;
+    resize:vertical;
+}
+
+button{
+    border:0;
+    border-radius:8px;
+    padding:12px 17px;
+    margin:6px 4px 6px 0;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:bold;
+    background:#183b73;
+    color:white;
+}
+
+button:hover{
+    opacity:.9;
+}
+
+.btn-green{
+    background:#16834b;
+}
+
+.btn-orange{
+    background:#d87900;
+}
+
+.btn-red{
+    background:#bd2734;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+}
+
+@media(max-width:750px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+}
+
+.preview-box{
+    overflow:auto;
+    border:1px solid #ddd;
+    border-radius:10px;
+    margin-top:15px;
+}
+
+table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:700px;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:9px;
+    text-align:left;
+}
+
+th{
+    background:#edf2fa;
+}
+
+.logo-preview{
+    max-width:130px;
+    max-height:90px;
+    display:none;
+    margin-top:10px;
+}
+
+.qr-preview{
+    max-width:120px;
+    max-height:120px;
+    display:none;
+    margin-top:10px;
+}
+
+.status{
+    padding:12px;
+    border-radius:8px;
+    background:#edf5ff;
+    margin-top:12px;
+}
+
+.mapping-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+@media(max-width:650px){
+    .mapping-row{
+        grid-template-columns:1fr;
+    }
+}
+
+.small{
+    font-size:13px;
+    color:#657084;
+}
+
+.hidden{
+    display:none;
+}
+
+/* Receipt Preview */
+
+.receipt{
+    border:2px solid #222;
+    padding:12px;
+    background:white;
+    margin-bottom:15px;
+}
+
+.receipt-header{
+    text-align:center;
+    border-bottom:1px solid #333;
+    padding-bottom:7px;
+    margin-bottom:8px;
+}
+
+.receipt-header h3{
+    margin:2px;
+    font-size:18px;
+}
+
+.receipt-header p{
+    margin:2px;
+    font-size:11px;
+}
+
+.receipt-logo{
+    width:55px;
+    height:55px;
+    object-fit:contain;
+}
+
+.receipt-main{
+    display:grid;
+    grid-template-columns:1fr 1fr 90px;
+    gap:8px;
+}
+
+.info-column{
+    border:1px solid #555;
+    padding:6px;
+}
+
+.info-line{
+    font-size:10px;
+    margin-bottom:6px;
+    border-bottom:1px dotted #aaa;
+    padding-bottom:3px;
+}
+
+.info-line strong{
+    display:inline-block;
+    min-width:70px;
+}
+
+.photo-box{
+    border:1px dashed #555;
+    height:115px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:10px;
+}
+
+.receipt-footer{
+    margin-top:8px;
+    border-top:1px solid #333;
+    padding-top:5px;
+    font-size:9px;
+    display:flex;
+    justify-content:space-between;
+}
+
+/* print */
+
+@media print{
+    body{
+        background:white;
+    }
+
+    header,
+    .container{
+        display:none;
+    }
+
+    #printArea{
+        display:block !important;
+    }
+}
+
+#printArea{
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Student Receipt & Attendance Generator</h1>
+    <p>Excel → Automatic Registration → Receipt PDF + Attendance PDF</p>
+</header>
+
+<div class="container">
+
+<!-- 1 -->
+<div class="card">
+    <h2>① Create Excel File</h2>
+
+    <p class="small">
+        এখানে তুমি Excel-এর column নির্বাচন করবে। Minimum হিসেবে Name, Number এবং Class রাখা হয়েছে।
+    </p>
+
+    <div class="grid">
+
+        <div>
+            <label>Student Name Column</label>
+            <input id="colName" value="Name">
+        </div>
+
+        <div>
+            <label>Phone Number Column</label>
+            <input id="colPhone" value="Number">
+        </div>
+
+        <div>
+            <label>Class Column</label>
+            <input id="colClass" value="Class">
+        </div>
+
+        <div>
+            <label>Cash Column</label>
+            <input id="colCash" value="Cash">
+        </div>
+
+    </div>
+
+    <label>Additional Columns</label>
+    <input id="extraColumns"
+           placeholder="School, School Roll, Batch, Section">
+
+    <button onclick="downloadExcelTemplate()" class="btn-green">
+        Download Excel Template
+    </button>
+</div>
+
+
+<!-- 2 -->
+<div class="card">
+
+    <h2>② Receipt Settings</h2>
+
+    <div class="grid">
+
+        <div>
+            <label>Institute / Coaching Name</label>
+            <input id="instituteName"
+                   value="YOUR COACHING CENTER">
+
+            <label>Address</label>
+            <input id="instituteAddress"
+                   value="Dhaka, Bangladesh">
+
+            <label>Phone</label>
+            <input id="institutePhone"
+                   value="017XXXXXXXX">
+
+            <label>Receipt Title</label>
+            <input id="receiptTitle"
+                   value="MONEY RECEIPT">
+
+            <label>Extra Text</label>
+            <textarea id="extraText"
+placeholder="Example: Thank you for your payment."></textarea>
+
+            <label>Footer Text</label>
+            <input id="footerText"
+                   value="This receipt is system generated.">
+        </div>
+
+        <div>
+
+            <label>Logo</label>
+            <input type="file"
+                   id="logoInput"
+                   accept="image/*"
+                   onchange="loadLogo(event)">
+
+            <img id="logoPreview"
+                 class="logo-preview">
+
+            <label>QR Code</label>
+            <input type="file"
+                   id="qrInput"
+                   accept="image/*"
+                   onchange="loadQR(event)">
+
+            <img id="qrPreview"
+                 class="qr-preview">
+
+            <label>Registration Prefix</label>
+            <input id="regPrefix"
+                   value="REG">
+
+            <label>Registration Starting Number</label>
+            <input id="regStart"
+                   type="number"
+                   value="1">
+
+            <label>Currency</label>
+            <input id="currency"
+                   value="৳">
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- 3 -->
+<div class="card">
+
+    <h2>③ Upload Excel</h2>
+
+    <input type="file"
+           id="excelInput"
+           accept=".xlsx,.xls,.csv"
+           onchange="handleExcel(event)">
+
+    <div id="status" class="status">
+        এখনো কোনো Excel upload করা হয়নি।
+    </div>
+
+</div>
+
+
+<!-- 4 -->
+<div class="card">
+
+    <h2>④ Excel Column Mapping</h2>
+
+    <p class="small">
+        Excel-এর column অনুযায়ী কোন তথ্য receipt-এ দেখাবে তা এখান থেকে নির্বাচন করা যাবে।
+    </p>
+
+    <div id="mappingArea">
+        Excel upload করার পর এখানে mapping options আসবে।
+    </div>
+
+</div>
+
+
+<!-- 5 -->
+<div class="card">
+
+    <h2>⑤ Student Data</h2>
+
+    <div id="dataPreview" class="preview-box">
+        কোনো data নেই।
+    </div>
+
+</div>
+
+
+<!-- 6 -->
+<div class="card">
+
+    <h2>⑥ Generate PDF</h2>
+
+    <button onclick="generateReceiptPDF()" class="btn-green">
+        🧾 Generate Receipt PDF
+    </button>
+
+    <button onclick="generateAttendancePDF()" class="btn-orange">
+        📋 Generate Attendance PDF
+    </button>
+
+    <button onclick="showReceiptPreview()">
+        👁 Preview Receipt
+    </button>
+
+</div>
+
+
+<!-- 7 -->
+<div class="card">
+
+    <h2>Receipt Preview</h2>
+
+    <div id="receiptPreview">
+        Excel upload করলে preview এখানে আসবে।
+    </div>
+
+</div>
+
+</div>
+
+
+<!-- Hidden print area -->
+<div id="printArea"></div>
+
+
+<script>
+
+let students = [];
+let headers = [];
+
+let logoData = null;
+let qrData = null;
+
+
+/* =========================
+   LOGO
+========================= */
+
+function loadLogo(event){
+
+    const file = event.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+
+        logoData = e.target.result;
+
+        const img = document.getElementById("logoPreview");
+
+        img.src = logoData;
+        img.style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+}
+
+
+/* =========================
+   QR
+========================= */
+
+function loadQR(event){
+
+    const file = event.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+
+        qrData = e.target.result;
+
+        const img = document.getElementById("qrPreview");
+
+        img.src = qrData;
+        img.style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+}
+
+
+/* =========================
+   CREATE EXCEL TEMPLATE
+========================= */
+
+function downloadExcelTemplate(){
+
+    const nameCol =
+        document.getElementById("colName").value.trim() || "Name";
+
+    const phoneCol =
+        document.getElementById("colPhone").value.trim() || "Number";
+
+    const classCol =
+        document.getElementById("colClass").value.trim() || "Class";
+
+    const cashCol =
+        document.getElementById("colCash").value.trim() || "Cash";
+
+    const extra =
+        document.getElementById("extraColumns").value
+        .split(",")
+        .map(x => x.trim())
+        .filter(x => x);
+
+    const finalHeaders = [
+        nameCol,
+        phoneCol,
+        classCol,
+        cashCol,
+        ...extra
+    ];
+
+    const sample = [];
+
+    const row1 = {};
+
+    finalHeaders.forEach(h => {
+        row1[h] = "";
+    });
+
+    sample.push(row1);
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(sample);
+
+    const workbook =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Students"
+    );
+
+    XLSX.writeFile(
+        workbook,
+        "Student_Data_Template.xlsx"
+    );
+
+}
+
+
+/* =========================
+   EXCEL UPLOAD
+========================= */
+
+function handleExcel(event){
+
+    const file = event.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+
+        try{
+
+            const data = new Uint8Array(e.target.result);
+
+            const workbook =
+                XLSX.read(data, {type:"array"});
+
+            const firstSheet =
+                workbook.Sheets[workbook.SheetNames[0]];
+
+            const json =
+                XLSX.utils.sheet_to_json(
+                    firstSheet,
+                    {defval:""}
+                );
+
+            if(json.length === 0){
+
+                alert("Excel file-এ কোনো student data পাওয়া যায়নি।");
+                return;
+            }
+
+            headers =
+                Object.keys(json[0]);
+
+            students =
+                json.map((student,index) => {
+
+                    const cashColumn =
+                        document.getElementById("colCash").value.trim();
+
+                    let cash =
+                        student[cashColumn];
+
+                    if(
+                        cash === undefined ||
+                        cash === null ||
+                        String(cash).trim() === ""
+                    ){
+
+                        cash = 0;
+
+                    }
+
+                    return {
+
+                        ...student,
+
+                        __registration:
+                            createRegistration(index),
+
+                        __cash:
+                            cash,
+
+                        __paymentMethod:
+                            cash == 0 ? "N/A" : "Cash"
+
+                    };
+
+                });
+
+            document.getElementById("status").innerHTML =
+                "✅ Excel successfully uploaded. " +
+                students.length +
+                " জন student পাওয়া গেছে।";
+
+            showDataPreview();
+
+            createMapping();
+
+            showReceiptPreview();
+
+        }catch(error){
+
+            console.error(error);
+
+            alert(
+                "Excel পড়তে সমস্যা হয়েছে। " +
+                "দয়া করে .xlsx অথবা .xls file ব্যবহার করুন।"
+            );
+
+        }
+
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
+
+/* =========================
+   REGISTRATION NUMBER
+========================= */
+
+function createRegistration(index){
+
+    const prefix =
+        document.getElementById("regPrefix").value.trim()
+        || "REG";
+
+    const start =
+        parseInt(
+            document.getElementById("regStart").value
+        ) || 1;
+
+    const number =
+        start + index;
+
+    return prefix +
+        "-" +
+        String(number).padStart(4,"0");
+}
+
+
+/* =========================
+   DATA PREVIEW
+========================= */
+
+function showDataPreview(){
+
+    if(students.length === 0){
+
+        document.getElementById("dataPreview").innerHTML =
+            "No data.";
+
+        return;
+    }
+
+    let html = "<table><thead><tr>";
+
+    html += "<th>SL</th>";
+    html += "<th>Registration No</th>";
+
+    headers.forEach(h => {
+
+        html += "<th>" + escapeHTML(h) + "</th>";
+
+    });
+
+    html += "<th>Cash</th>";
+    html += "<th>Payment Method</th>";
+
+    html += "</tr></thead><tbody>";
+
+    students.forEach((s,index) => {
+
+        html += "<tr>";
+
+        html += "<td>" + (index+1) + "</td>";
+
+        html += "<td>" +
+            escapeHTML(s.__registration) +
+            "</td>";
+
+        headers.forEach(h => {
+
+            html += "<td>" +
+                escapeHTML(s[h]) +
+                "</td>";
+
+        });
+
+        html += "<td>" +
+            escapeHTML(s.__cash) +
+            "</td>";
+
+        html += "<td>" +
+            escapeHTML(s.__paymentMethod) +
+            "</td>";
+
+        html += "</tr>";
+
+    });
+
+    html += "</tbody></table>";
+
+    document.getElementById("dataPreview").innerHTML =
+        html;
+}
+
+
+/* =========================
+   COLUMN MAPPING
+========================= */
+
+function createMapping(){
+
+    if(headers.length === 0){
+
+        document.getElementById("mappingArea").innerHTML =
+            "Excel upload করার পর mapping options আসবে।";
+
+        return;
+    }
+
+    const nameDefault =
+        document.getElementById("colName").value.trim();
+
+    const phoneDefault =
+        document.getElementById("colPhone").value.trim();
+
+    const classDefault =
+        document.getElementById("colClass").value.trim();
+
+    let html = "";
+
+    html += mappingSelect(
+        "Student Name",
+        "mapName",
+        nameDefault
+    );
+
+    html += mappingSelect(
+        "Phone Number",
+        "mapPhone",
+        phoneDefault
+    );
+
+    html += mappingSelect(
+        "Class",
+        "mapClass",
+        classDefault
+    );
+
+    headers.forEach(h => {
+
+        if(
+            h !== nameDefault &&
+            h !== phoneDefault &&
+            h !== classDefault
+        ){
+
+            html += mappingSelect(
+                "Receipt: " + h,
+                "map_" + safeID(h),
+                h
+            );
+
+        }
+
+    });
+
+    document.getElementById("mappingArea").innerHTML =
+        html;
+}
+
+
+function mappingSelect(label,id,selected){
+
+    let html =
+        '<div class="mapping-row">' +
+        '<div><b>' + escapeHTML(label) + '</b></div>' +
+        '<div>' +
+        '<select id="' + id + '">';
+
+    html += '<option value="">-- None --</option>';
+
+    headers.forEach(h => {
+
+        const isSelected =
+            h === selected ? "selected" : "";
+
+        html +=
+            '<option value="' +
+            escapeHTML(h) +
+            '" ' +
+            isSelected +
+            '>' +
+            escapeHTML(h) +
+            '</option>';
+
+    });
+
+    html +=
+        '</select>' +
+        '</div>' +
+        '</div>';
+
+    return html;
+}
+
+
+function safeID(text){
+
+    return String(text)
+        .replace(/[^a-zA-Z0-9_]/g,"_");
+}
+
+
+/* =========================
+   RECEIPT PREVIEW
+========================= */
+
+function showReceiptPreview(){
+
+    if(students.length === 0){
+
+        document.getElementById("receiptPreview").innerHTML =
+            "Excel upload করুন।";
+
+        return;
+    }
+
+    let html = "";
+
+    students.slice(0,3).forEach(student => {
+
+        html += createReceiptHTML(student);
+
+    });
+
+    document.getElementById("receiptPreview").innerHTML =
+        html;
+}
+
+
+function createReceiptHTML(student){
+
+    const currency =
+        document.getElementById("currency").value || "৳";
+
+    const institute =
+        document.getElementById("instituteName").value;
+
+    const address =
+        document.getElementById("instituteAddress").value;
+
+    const phone =
+        document.getElementById("institutePhone").value;
+
+    const title =
+        document.getElementById("receiptTitle").value;
+
+    const extra =
+        document.getElementById("extraText").value;
+
+    const footer =
+        document.getElementById("footerText").value;
+
+
+    const nameCol =
+        document.getElementById("mapName")
+        ? document.getElementById("mapName").value
+        : document.getElementById("colName").value;
+
+    const phoneCol =
+        document.getElementById("mapPhone")
+        ? document.getElementById("mapPhone").value
+        : document.getElementById("colPhone").value;
+
+    const classCol =
+        document.getElementById("mapClass")
+        ? document.getElementById("mapClass").value
+        : document.getElementById("colClass").value;
+
+
+    let left = "";
+    let right = "";
+
+
+    left += infoLine(
+        "Name",
+        student[nameCol] || "N/A"
+    );
+
+    left += infoLine(
+        "Number",
+        student[phoneCol] || "N/A"
+    );
+
+    left += infoLine(
+        "Class",
+        student[classCol] || "N/A"
+    );
+
+    left += infoLine(
+        "Reg. No",
+        student.__registration
+    );
+
+
+    right += infoLine(
+        "Cash",
+        currency + " " + (student.__cash || 0)
+    );
+
+    right += infoLine(
+        "Method",
+        student.__paymentMethod || "N/A"
+    );
+
+    right += infoLine(
+        "Date",
+        new Date().toLocaleDateString("en-GB")
+    );
+
+    right += infoLine(
+        "Receipt No",
+        student.__registration
+    );
+
+
+    return `
+    <div class="receipt">
+
+        <div class="receipt-header">
+
+            ${
+                logoData
+                ?
+                `<img class="receipt-logo"
+                      src="${logoData}">`
+                :
+                ""
+            }
+
+            <h3>${escapeHTML(institute)}</h3>
+
+            <p>${escapeHTML(address)}</p>
+
+            <p>${escapeHTML(phone)}</p>
+
+            <h3>${escapeHTML(title)}</h3>
+
+        </div>
+
+        <div class="receipt-main">
+
+            <div class="info-column">
+                ${left}
+            </div>
+
+            <div class="info-column">
+                ${right}
+            </div>
+
+            <div>
+
+                <div class="photo-box">
+                    STUDENT<br>
+                    PHOTO
+                </div>
+
+                ${
+                    qrData
+                    ?
+                    `<img src="${qrData}"
+                          style="width:70px;
+                          height:70px;
+                          object-fit:contain;
+                          margin-top:5px;">`
+                    :
+                    ""
+                }
+
+            </div>
+
+        </div>
+
+        ${
+            extra
+            ?
+            `<div style="font-size:9px;margin-top:7px;">
+                ${escapeHTML(extra)}
+             </div>`
+            :
+            ""
+        }
+
+        <div class="receipt-footer">
+
+            <span>${escapeHTML(footer)}</span>
+
+            <span>Authorized Signature</span>
+
+        </div>
+
+    </div>
+    `;
+}
+
+
+function infoLine(label,value){
+
+    return `
+        <div class="info-line">
+            <strong>${escapeHTML(label)}:</strong>
+            ${escapeHTML(value)}
+        </div>
+    `;
+}
+
+
+/* =========================
+   RECEIPT PDF
+========================= */
+
+async function generateReceiptPDF(){
+
+    if(students.length === 0){
+
+        alert("আগে Excel upload করুন।");
+        return;
+    }
+
+    const {jsPDF} = window.jspdf;
+
+    const pdf =
+        new jsPDF({
+            orientation:"portrait",
+            unit:"mm",
+            format:"a4"
+        });
+
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+
+    const margin = 8;
+
+    const receiptWidth =
+        pageWidth - margin * 2;
+
+    const receiptHeight =
+        (pageHeight - margin * 2) / 4;
+
+
+    for(let i=0;i<students.length;i++){
+
+        const position =
+            i % 4;
+
+        if(position === 0 && i !== 0){
+
+            pdf.addPage();
+
+        }
+
+        drawReceiptPDF(
+            pdf,
+            students[i],
+            margin,
+            margin + position * receiptHeight,
+            receiptWidth,
+            receiptHeight
+        );
+
+    }
+
+    pdf.save("Money_Receipts.pdf");
+}
+
+
+/* =========================
+   DRAW RECEIPT
+========================= */
+
+function drawReceiptPDF(
+    pdf,
+    student,
+    x,
+    y,
+    w,
+    h
+){
+
+    const currency =
+        document.getElementById("currency").value || "৳";
+
+    const institute =
+        document.getElementById("instituteName").value;
+
+    const address =
+        document.getElementById("instituteAddress").value;
+
+    const phone =
+        document.getElementById("institutePhone").value;
+
+    const title =
+        document.getElementById("receiptTitle").value;
+
+    const footer =
+        document.getElementById("footerText").value;
+
+
+    pdf.setDrawColor(40);
+
+    pdf.rect(x,y,w,h);
+
+
+    /* Header */
+
+    let headerY = y + 7;
+
+    if(logoData){
+
+        try{
+
+            pdf.addImage(
+                logoData,
+                "PNG",
+                x+4,
+                y+3,
+                14,
+                14
+            );
+
+        }catch(e){}
+
+    }
+
+
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica","bold");
+
+    pdf.text(
+        institute,
+        x + w/2,
+        headerY,
+        {align:"center"}
+    );
+
+    pdf.setFontSize(7);
+    pdf.setFont("helvetica","normal");
+
+    pdf.text(
+        address,
+        x + w/2,
+        headerY+4,
+        {align:"center"}
+    );
+
+    pdf.text(
+        phone,
+        x + w/2,
+        headerY+8,
+        {align:"center"}
+    );
+
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica","bold");
+
+    pdf.text(
+        title,
+        x + w/2,
+        headerY+14,
+        {align:"center"}
+    );
+
+
+    pdf.line(
+        x+2,
+        y+20,
+        x+w-2,
+        y+20
+    );
+
+
+    /* Columns */
+
+    const colY = y+23;
+
+    const photoW = 28;
+
+    const infoW =
+        (w-photoW-8)/2;
+
+
+    pdf.rect(
+        x+3,
+        colY,
+        infoW,
+        h-31
+    );
+
+    pdf.rect(
+        x+5+infoW,
+        colY,
+        infoW,
+        h-31
+    );
+
+    pdf.rect(
+        x+w-photoW-3,
+        colY,
+        photoW,
+        30
+    );
+
+
+    pdf.setFontSize(7);
+
+    const nameCol =
+        document.getElementById("mapName")
+        ? document.getElementById("mapName").value
+        : document.getElementById("colName").value;
+
+    const phoneCol =
+        document.getElementById("mapPhone")
+        ? document.getElementById("mapPhone").value
+        : document.getElementById("colPhone").value;
+
+    const classCol =
+        document.getElementById("mapClass")
+        ? document.getElementById("mapClass").value
+        : document.getElementById("colClass").value;
+
+
+    let yy = colY+6;
+
+
+    pdf.setFont("helvetica","bold");
+
+    pdf.text(
+        "Student Information",
+        x+5,
+        yy
+    );
+
+    pdf.setFont("helvetica","normal");
+
+    yy += 6;
+
+    pdf.text(
+        "Name: " +
+        String(student[nameCol] || "N/A"),
+        x+5,
+        yy
+    );
+
+    yy += 5;
+
+    pdf.text(
+        "Number: " +
+        String(student[phoneCol] || "N/A"),
+        x+5,
+        yy
+    );
+
+    yy += 5;
+
+    pdf.text(
+        "Class: " +
+        String(student[classCol] || "N/A"),
+        x+5,
+        yy
+    );
+
+    yy += 5;
+
+    pdf.text(
+        "Reg: " +
+        student.__registration,
+        x+5,
+        yy
+    );
+
+
+    /* Payment */
+
+    let py = colY+6;
+
+    pdf.setFont("helvetica","bold");
+
+    pdf.text(
+        "Payment Information",
+        x+7+infoW,
+        py
+    );
+
+    pdf.setFont("helvetica","normal");
+
+    py += 6;
+
+    pdf.text(
+        "Cash: " +
+        currency +
+        " " +
+        (student.__cash || 0),
+        x+7+infoW,
+        py
+    );
+
+    py += 5;
+
+    pdf.text(
+        "Method: " +
+        (student.__paymentMethod || "N/A"),
+        x+7+infoW,
+        py
+    );
+
+    py += 5;
+
+    pdf.text(
+        "Date: " +
+        new Date().toLocaleDateString("en-GB"),
+        x+7+infoW,
+        py
+    );
+
+    py += 5;
+
+    pdf.text(
+        "Receipt: " +
+        student.__registration,
+        x+7+infoW,
+        py
+    );
+
+
+    /* Photo */
+
+    pdf.setFontSize(6);
+
+    pdf.text(
+        "STUDENT PHOTO",
+        x+w-photoW/2-3,
+        colY+16,
+        {align:"center"}
+    );
+
+
+    /* QR */
+
+    if(qrData){
+
+        try{
+
+            pdf.addImage(
+                qrData,
+                "PNG",
+                x+w-photoW+1,
+                colY+33,
+                18,
+                18
+            );
+
+        }catch(e){}
+
+    }
+
+
+    /* Footer */
+
+    pdf.setFontSize(6);
+
+    pdf.text(
+        footer,
+        x+4,
+        y+h-5
+    );
+
+    pdf.text(
+        "Authorized Signature",
+        x+w-4,
+        y+h-5,
+        {align:"right"}
+    );
+}
+
+
+/* =========================
+   ATTENDANCE PDF
+========================= */
+
+function generateAttendancePDF(){
+
+    if(students.length === 0){
+
+        alert("আগে Excel upload করুন।");
+        return;
+    }
+
+    const {jsPDF} = window.jspdf;
+
+    const pdf =
+        new jsPDF({
+            orientation:"landscape",
+            unit:"mm",
+            format:"a4"
+        });
+
+
+    const pageWidth = 297;
+    const pageHeight = 210;
+
+    const margin = 10;
+
+    let y = margin;
+
+
+    drawAttendanceHeader(pdf);
+
+
+    y = 35;
+
+    const columns = [
+        "SL",
+        "Registration No",
+        "Name",
+        "Number",
+        "Class",
+        "School",
+        "School Roll",
+        "Signature"
+    ];
+
+
+    const widths = [
+        10,
+        32,
+        45,
+        32,
+        18,
+        55,
+        25,
+        60
+    ];
+
+
+    function drawTableHeader(){
+
+        pdf.setFontSize(7);
+        pdf.setFont("helvetica","bold");
+
+        let x = margin;
+
+        columns.forEach((col,i)=>{
+
+            pdf.rect(
+                x,
+                y,
+                widths[i],
+                8
+            );
+
+            pdf.text(
+                col,
+                x+widths[i]/2,
+                y+5,
+                {align:"center"}
+            );
+
+            x += widths[i];
+
+        });
+
+        y += 8;
+
+        pdf.setFont("helvetica","normal");
+    }
+
+
+    drawTableHeader();
+
+
+    students.forEach((student,index)=>{
+
+        if(y > pageHeight-18){
+
+            pdf.addPage();
+
+            y = margin;
+
+            drawAttendanceHeader(pdf);
+
+            y = 35;
+
+            drawTableHeader();
+
+        }
+
+
+        const school =
+            getStudentField(
+                student,
+                ["School","school"]
+            );
+
+        const schoolRoll =
+            getStudentField(
+                student,
+                ["School Roll","SchoolRoll","Roll"]
+            );
+
+        const nameCol =
+            document.getElementById("mapName")
+            ? document.getElementById("mapName").value
+            : document.getElementById("colName").value;
+
+        const phoneCol =
+            document.getElementById("mapPhone")
+            ? document.getElementById("mapPhone").value
+            : document.getElementById("colPhone").value;
+
+        const classCol =
+            document.getElementById("mapClass")
+            ? document.getElementById("mapClass").value
+            : document.getElementById("colClass").value;
+
+
+        const values = [
+
+            index+1,
+
+            student.__registration,
+
+            student[nameCol] || "N/A",
+
+            student[phoneCol] || "N/A",
+
+            student[classCol] || "N/A",
+
+            school || "N/A",
+
+            schoolRoll || "N/A",
+
+            ""
+
+        ];
+
+
+        let x = margin;
+
+        pdf.setFontSize(6.5);
+
+        values.forEach((value,i)=>{
+
+            pdf.rect(
+                x,
+                y,
+                widths[i],
+                8
+            );
+
+            pdf.text(
+                String(value),
+                x+2,
+                y+5
+            );
+
+            x += widths[i];
+
+        });
+
+        y += 8;
+
+    });
+
+
+    pdf.save("Attendance_Sheet.pdf");
+}
+
+
+/* =========================
+   ATTENDANCE HEADER
+========================= */
+
+function drawAttendanceHeader(pdf){
+
+    const institute =
+        document.getElementById("instituteName").value;
+
+    pdf.setFont("helvetica","bold");
+
+    pdf.setFontSize(14);
+
+    pdf.text(
+        institute,
+        148.5,
+        12,
+        {align:"center"}
+    );
+
+    pdf.setFontSize(10);
+
+    pdf.text(
+        "ATTENDANCE SHEET",
+        148.5,
+        19,
+        {align:"center"}
+    );
+
+    pdf.setFont("helvetica","normal");
+
+    pdf.setFontSize(7);
+
+    pdf.text(
+        new Date().toLocaleDateString("en-GB"),
+        148.5,
+        25,
+        {align:"center"}
+    );
+}
+
+
+/* =========================
+   FIND FIELD
+========================= */
+
+function getStudentField(student,names){
+
+    for(const name of names){
+
+        if(
+            student[name] !== undefined &&
+            String(student[name]).trim() !== ""
+        ){
+
+            return student[name];
+
+        }
+
+    }
+
+    return "";
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(value){
+
+    if(value === undefined ||
+       value === null){
+
+        return "";
+
+    }
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+</script>
+
+</body>
+</html>
