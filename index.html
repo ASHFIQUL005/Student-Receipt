@@ -6,10 +6,7 @@
 
 <title>Student Receipt & Attendance Generator</title>
 
-<!-- Excel -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-<!-- PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -186,13 +183,16 @@ th{
     display:none;
 }
 
-/* Receipt Preview */
+/* =========================
+   RECEIPT PREVIEW
+========================= */
 
 .receipt{
-    border:2px solid #222;
-    padding:12px;
+    border:2px solid #1d1d1d;
+    padding:11px;
     background:white;
-    margin-bottom:15px;
+    margin-bottom:18px;
+    border-radius:4px;
 }
 
 .receipt-header{
@@ -200,6 +200,7 @@ th{
     border-bottom:1px solid #333;
     padding-bottom:7px;
     margin-bottom:8px;
+    position:relative;
 }
 
 .receipt-header h3{
@@ -209,19 +210,26 @@ th{
 
 .receipt-header p{
     margin:2px;
-    font-size:11px;
+    font-size:10px;
 }
 
 .receipt-logo{
-    width:55px;
-    height:55px;
+    width:48px;
+    height:48px;
     object-fit:contain;
+    margin-bottom:2px;
+}
+
+.receipt-title{
+    font-size:12px !important;
+    font-weight:bold;
+    margin-top:5px !important;
 }
 
 .receipt-main{
     display:grid;
-    grid-template-columns:1fr 1fr 90px;
-    gap:8px;
+    grid-template-columns:1fr 1fr 82px;
+    gap:7px;
 }
 
 .info-column{
@@ -229,38 +237,70 @@ th{
     padding:6px;
 }
 
-.info-line{
+.info-heading{
     font-size:10px;
-    margin-bottom:6px;
+    font-weight:bold;
+    text-align:center;
+    background:#edf2fa;
+    padding:4px;
+    margin:-6px -6px 6px -6px;
+    border-bottom:1px solid #777;
+}
+
+.info-line{
+    font-size:9.5px;
+    margin-bottom:5px;
     border-bottom:1px dotted #aaa;
     padding-bottom:3px;
+    line-height:1.25;
 }
 
 .info-line strong{
     display:inline-block;
-    min-width:70px;
+    min-width:58px;
 }
 
 .photo-box{
     border:1px dashed #555;
-    height:115px;
+    height:95px;
     display:flex;
     align-items:center;
     justify-content:center;
     text-align:center;
-    font-size:10px;
+    font-size:9px;
+}
+
+.qr-preview-small{
+    width:60px;
+    height:60px;
+    object-fit:contain;
+    display:block;
+    margin:5px auto 0;
+}
+
+.receipt-extra{
+    font-size:8.5px;
+    margin-top:6px;
+    padding:4px 6px;
+    border:1px solid #ddd;
 }
 
 .receipt-footer{
-    margin-top:8px;
+    margin-top:6px;
     border-top:1px solid #333;
     padding-top:5px;
-    font-size:9px;
+    font-size:8px;
     display:flex;
     justify-content:space-between;
 }
 
-/* print */
+/* =========================
+   PRINT AREA
+========================= */
+
+#printArea{
+    display:none;
+}
 
 @media print{
     body{
@@ -269,16 +309,12 @@ th{
 
     header,
     .container{
-        display:none;
+        display:none !important;
     }
 
     #printArea{
         display:block !important;
     }
-}
-
-#printArea{
-    display:none;
 }
 </style>
 </head>
@@ -292,12 +328,16 @@ th{
 
 <div class="container">
 
-<!-- 1 -->
+<!-- =========================
+     1. CREATE EXCEL
+========================= -->
+
 <div class="card">
+
     <h2>① Create Excel File</h2>
 
     <p class="small">
-        এখানে তুমি Excel-এর column নির্বাচন করবে। Minimum হিসেবে Name, Number এবং Class রাখা হয়েছে।
+        Minimum হিসেবে Name, Number এবং Class রাখা হয়েছে। চাইলে অতিরিক্ত column যোগ করতে পারবে।
     </p>
 
     <div class="grid">
@@ -325,16 +365,21 @@ th{
     </div>
 
     <label>Additional Columns</label>
+
     <input id="extraColumns"
            placeholder="School, School Roll, Batch, Section">
 
     <button onclick="downloadExcelTemplate()" class="btn-green">
         Download Excel Template
     </button>
+
 </div>
 
 
-<!-- 2 -->
+<!-- =========================
+     2. RECEIPT SETTINGS
+========================= -->
+
 <div class="card">
 
     <h2>② Receipt Settings</h2>
@@ -342,34 +387,43 @@ th{
     <div class="grid">
 
         <div>
+
             <label>Institute / Coaching Name</label>
+
             <input id="instituteName"
                    value="YOUR COACHING CENTER">
 
             <label>Address</label>
+
             <input id="instituteAddress"
                    value="Dhaka, Bangladesh">
 
             <label>Phone</label>
+
             <input id="institutePhone"
                    value="017XXXXXXXX">
 
             <label>Receipt Title</label>
+
             <input id="receiptTitle"
                    value="MONEY RECEIPT">
 
             <label>Extra Text</label>
+
             <textarea id="extraText"
 placeholder="Example: Thank you for your payment."></textarea>
 
             <label>Footer Text</label>
+
             <input id="footerText"
                    value="This receipt is system generated.">
+
         </div>
 
         <div>
 
             <label>Logo</label>
+
             <input type="file"
                    id="logoInput"
                    accept="image/*"
@@ -378,7 +432,9 @@ placeholder="Example: Thank you for your payment."></textarea>
             <img id="logoPreview"
                  class="logo-preview">
 
+
             <label>QR Code</label>
+
             <input type="file"
                    id="qrInput"
                    accept="image/*"
@@ -387,16 +443,22 @@ placeholder="Example: Thank you for your payment."></textarea>
             <img id="qrPreview"
                  class="qr-preview">
 
+
             <label>Registration Prefix</label>
+
             <input id="regPrefix"
                    value="REG">
 
+
             <label>Registration Starting Number</label>
+
             <input id="regStart"
                    type="number"
                    value="1">
 
+
             <label>Currency</label>
+
             <input id="currency"
                    value="৳">
 
@@ -407,7 +469,10 @@ placeholder="Example: Thank you for your payment."></textarea>
 </div>
 
 
-<!-- 3 -->
+<!-- =========================
+     3. UPLOAD EXCEL
+========================= -->
+
 <div class="card">
 
     <h2>③ Upload Excel</h2>
@@ -424,7 +489,10 @@ placeholder="Example: Thank you for your payment."></textarea>
 </div>
 
 
-<!-- 4 -->
+<!-- =========================
+     4. MAPPING
+========================= -->
+
 <div class="card">
 
     <h2>④ Excel Column Mapping</h2>
@@ -440,7 +508,10 @@ placeholder="Example: Thank you for your payment."></textarea>
 </div>
 
 
-<!-- 5 -->
+<!-- =========================
+     5. DATA
+========================= -->
+
 <div class="card">
 
     <h2>⑤ Student Data</h2>
@@ -452,7 +523,10 @@ placeholder="Example: Thank you for your payment."></textarea>
 </div>
 
 
-<!-- 6 -->
+<!-- =========================
+     6. PDF
+========================= -->
+
 <div class="card">
 
     <h2>⑥ Generate PDF</h2>
@@ -472,7 +546,10 @@ placeholder="Example: Thank you for your payment."></textarea>
 </div>
 
 
-<!-- 7 -->
+<!-- =========================
+     7. PREVIEW
+========================= -->
+
 <div class="card">
 
     <h2>Receipt Preview</h2>
@@ -486,7 +563,6 @@ placeholder="Example: Thank you for your payment."></textarea>
 </div>
 
 
-<!-- Hidden print area -->
 <div id="printArea"></div>
 
 
@@ -515,10 +591,13 @@ function loadLogo(event){
 
         logoData = e.target.result;
 
-        const img = document.getElementById("logoPreview");
+        const img =
+            document.getElementById("logoPreview");
 
         img.src = logoData;
         img.style.display = "block";
+
+        showReceiptPreview();
     };
 
     reader.readAsDataURL(file);
@@ -541,10 +620,13 @@ function loadQR(event){
 
         qrData = e.target.result;
 
-        const img = document.getElementById("qrPreview");
+        const img =
+            document.getElementById("qrPreview");
 
         img.src = qrData;
         img.style.display = "block";
+
+        showReceiptPreview();
     };
 
     reader.readAsDataURL(file);
@@ -552,22 +634,26 @@ function loadQR(event){
 
 
 /* =========================
-   CREATE EXCEL TEMPLATE
+   EXCEL TEMPLATE
 ========================= */
 
 function downloadExcelTemplate(){
 
     const nameCol =
-        document.getElementById("colName").value.trim() || "Name";
+        document.getElementById("colName").value.trim()
+        || "Name";
 
     const phoneCol =
-        document.getElementById("colPhone").value.trim() || "Number";
+        document.getElementById("colPhone").value.trim()
+        || "Number";
 
     const classCol =
-        document.getElementById("colClass").value.trim() || "Class";
+        document.getElementById("colClass").value.trim()
+        || "Class";
 
     const cashCol =
-        document.getElementById("colCash").value.trim() || "Cash";
+        document.getElementById("colCash").value.trim()
+        || "Cash";
 
     const extra =
         document.getElementById("extraColumns").value
@@ -583,18 +669,14 @@ function downloadExcelTemplate(){
         ...extra
     ];
 
-    const sample = [];
-
-    const row1 = {};
+    const row = {};
 
     finalHeaders.forEach(h => {
-        row1[h] = "";
+        row[h] = "";
     });
 
-    sample.push(row1);
-
     const worksheet =
-        XLSX.utils.json_to_sheet(sample);
+        XLSX.utils.json_to_sheet([row]);
 
     const workbook =
         XLSX.utils.book_new();
@@ -609,7 +691,6 @@ function downloadExcelTemplate(){
         workbook,
         "Student_Data_Template.xlsx"
     );
-
 }
 
 
@@ -629,23 +710,29 @@ function handleExcel(event){
 
         try{
 
-            const data = new Uint8Array(e.target.result);
+            const data =
+                new Uint8Array(e.target.result);
 
             const workbook =
-                XLSX.read(data, {type:"array"});
+                XLSX.read(data,{type:"array"});
 
-            const firstSheet =
-                workbook.Sheets[workbook.SheetNames[0]];
+            const sheet =
+                workbook.Sheets[
+                    workbook.SheetNames[0]
+                ];
 
             const json =
                 XLSX.utils.sheet_to_json(
-                    firstSheet,
+                    sheet,
                     {defval:""}
                 );
 
             if(json.length === 0){
 
-                alert("Excel file-এ কোনো student data পাওয়া যায়নি।");
+                alert(
+                    "Excel file-এ কোনো student data পাওয়া যায়নি।"
+                );
+
                 return;
             }
 
@@ -653,10 +740,13 @@ function handleExcel(event){
                 Object.keys(json[0]);
 
             students =
-                json.map((student,index) => {
+                json.map((student,index)=>{
 
                     const cashColumn =
-                        document.getElementById("colCash").value.trim();
+                        document
+                        .getElementById("colCash")
+                        .value
+                        .trim();
 
                     let cash =
                         student[cashColumn];
@@ -682,16 +772,20 @@ function handleExcel(event){
                             cash,
 
                         __paymentMethod:
-                            cash == 0 ? "N/A" : "Cash"
+                            Number(cash) === 0
+                            ? "N/A"
+                            : "Cash"
 
                     };
 
                 });
 
+
             document.getElementById("status").innerHTML =
-                "✅ Excel successfully uploaded. " +
-                students.length +
-                " জন student পাওয়া গেছে।";
+                "✅ Excel successfully uploaded. "
+                + students.length
+                + " জন student পাওয়া গেছে।";
+
 
             showDataPreview();
 
@@ -699,13 +793,13 @@ function handleExcel(event){
 
             showReceiptPreview();
 
-        }catch(error){
+        }
+        catch(error){
 
             console.error(error);
 
             alert(
-                "Excel পড়তে সমস্যা হয়েছে। " +
-                "দয়া করে .xlsx অথবা .xls file ব্যবহার করুন।"
+                "Excel পড়তে সমস্যা হয়েছে।"
             );
 
         }
@@ -717,13 +811,15 @@ function handleExcel(event){
 
 
 /* =========================
-   REGISTRATION NUMBER
+   REGISTRATION
 ========================= */
 
 function createRegistration(index){
 
     const prefix =
-        document.getElementById("regPrefix").value.trim()
+        document.getElementById("regPrefix")
+        .value
+        .trim()
         || "REG";
 
     const start =
@@ -731,12 +827,10 @@ function createRegistration(index){
             document.getElementById("regStart").value
         ) || 1;
 
-    const number =
-        start + index;
-
-    return prefix +
-        "-" +
-        String(number).padStart(4,"0");
+    return prefix
+        + "-"
+        + String(start + index)
+        .padStart(4,"0");
 }
 
 
@@ -754,53 +848,70 @@ function showDataPreview(){
         return;
     }
 
-    let html = "<table><thead><tr>";
+    let html =
+        "<table><thead><tr>";
 
     html += "<th>SL</th>";
     html += "<th>Registration No</th>";
 
-    headers.forEach(h => {
+    headers.forEach(h=>{
 
-        html += "<th>" + escapeHTML(h) + "</th>";
+        html +=
+            "<th>"
+            + escapeHTML(h)
+            + "</th>";
 
     });
 
     html += "<th>Cash</th>";
     html += "<th>Payment Method</th>";
 
-    html += "</tr></thead><tbody>";
+    html +=
+        "</tr></thead><tbody>";
 
-    students.forEach((s,index) => {
+
+    students.forEach((s,index)=>{
 
         html += "<tr>";
 
-        html += "<td>" + (index+1) + "</td>";
+        html +=
+            "<td>"
+            + (index+1)
+            + "</td>";
 
-        html += "<td>" +
-            escapeHTML(s.__registration) +
-            "</td>";
+        html +=
+            "<td>"
+            + escapeHTML(s.__registration)
+            + "</td>";
 
-        headers.forEach(h => {
 
-            html += "<td>" +
-                escapeHTML(s[h]) +
-                "</td>";
+        headers.forEach(h=>{
+
+            html +=
+                "<td>"
+                + escapeHTML(s[h])
+                + "</td>";
 
         });
 
-        html += "<td>" +
-            escapeHTML(s.__cash) +
-            "</td>";
 
-        html += "<td>" +
-            escapeHTML(s.__paymentMethod) +
-            "</td>";
+        html +=
+            "<td>"
+            + escapeHTML(s.__cash)
+            + "</td>";
+
+        html +=
+            "<td>"
+            + escapeHTML(s.__paymentMethod)
+            + "</td>";
 
         html += "</tr>";
 
     });
 
-    html += "</tbody></table>";
+
+    html +=
+        "</tbody></table>";
 
     document.getElementById("dataPreview").innerHTML =
         html;
@@ -808,7 +919,7 @@ function showDataPreview(){
 
 
 /* =========================
-   COLUMN MAPPING
+   MAPPING
 ========================= */
 
 function createMapping(){
@@ -816,7 +927,7 @@ function createMapping(){
     if(headers.length === 0){
 
         document.getElementById("mappingArea").innerHTML =
-            "Excel upload করার পর mapping options আসবে।";
+            "Excel upload করার পর mapping options আসবে.";
 
         return;
     }
@@ -850,7 +961,8 @@ function createMapping(){
         classDefault
     );
 
-    headers.forEach(h => {
+
+    headers.forEach(h=>{
 
         if(
             h !== nameDefault &&
@@ -868,6 +980,7 @@ function createMapping(){
 
     });
 
+
     document.getElementById("mappingArea").innerHTML =
         html;
 }
@@ -876,33 +989,40 @@ function createMapping(){
 function mappingSelect(label,id,selected){
 
     let html =
-        '<div class="mapping-row">' +
-        '<div><b>' + escapeHTML(label) + '</b></div>' +
-        '<div>' +
-        '<select id="' + id + '">';
+        '<div class="mapping-row">'
+        + '<div><b>'
+        + escapeHTML(label)
+        + '</b></div>'
+        + '<div>'
+        + '<select id="'
+        + id
+        + '">';
 
-    html += '<option value="">-- None --</option>';
+    html +=
+        '<option value="">-- None --</option>';
 
-    headers.forEach(h => {
 
-        const isSelected =
-            h === selected ? "selected" : "";
+    headers.forEach(h=>{
+
+        const selectedText =
+            h === selected
+            ? "selected"
+            : "";
 
         html +=
-            '<option value="' +
-            escapeHTML(h) +
-            '" ' +
-            isSelected +
-            '>' +
-            escapeHTML(h) +
-            '</option>';
+            '<option value="'
+            + escapeHTML(h)
+            + '" '
+            + selectedText
+            + '>'
+            + escapeHTML(h)
+            + '</option>';
 
     });
 
+
     html +=
-        '</select>' +
-        '</div>' +
-        '</div>';
+        "</select></div></div>";
 
     return html;
 }
@@ -912,6 +1032,34 @@ function safeID(text){
 
     return String(text)
         .replace(/[^a-zA-Z0-9_]/g,"_");
+}
+
+
+/* =========================
+   FIELD HELPERS
+========================= */
+
+function getMappedValue(student,type,fallback){
+
+    const element =
+        document.getElementById(type);
+
+    const column =
+        element
+        ? element.value
+        : fallback;
+
+    if(
+        column &&
+        student[column] !== undefined &&
+        String(student[column]).trim() !== ""
+    ){
+
+        return student[column];
+
+    }
+
+    return "N/A";
 }
 
 
@@ -931,11 +1079,15 @@ function showReceiptPreview(){
 
     let html = "";
 
-    students.slice(0,3).forEach(student => {
+    students
+        .slice(0,3)
+        .forEach(student=>{
 
-        html += createReceiptHTML(student);
+            html +=
+                createReceiptHTML(student);
 
-    });
+        });
+
 
     document.getElementById("receiptPreview").innerHTML =
         html;
@@ -945,7 +1097,8 @@ function showReceiptPreview(){
 function createReceiptHTML(student){
 
     const currency =
-        document.getElementById("currency").value || "৳";
+        document.getElementById("currency").value
+        || "৳";
 
     const institute =
         document.getElementById("instituteName").value;
@@ -966,69 +1119,76 @@ function createReceiptHTML(student){
         document.getElementById("footerText").value;
 
 
-    const nameCol =
-        document.getElementById("mapName")
-        ? document.getElementById("mapName").value
-        : document.getElementById("colName").value;
+    const name =
+        getMappedValue(
+            student,
+            "mapName",
+            document.getElementById("colName").value
+        );
 
-    const phoneCol =
-        document.getElementById("mapPhone")
-        ? document.getElementById("mapPhone").value
-        : document.getElementById("colPhone").value;
+    const number =
+        getMappedValue(
+            student,
+            "mapPhone",
+            document.getElementById("colPhone").value
+        );
 
-    const classCol =
-        document.getElementById("mapClass")
-        ? document.getElementById("mapClass").value
-        : document.getElementById("colClass").value;
-
-
-    let left = "";
-    let right = "";
-
-
-    left += infoLine(
-        "Name",
-        student[nameCol] || "N/A"
-    );
-
-    left += infoLine(
-        "Number",
-        student[phoneCol] || "N/A"
-    );
-
-    left += infoLine(
-        "Class",
-        student[classCol] || "N/A"
-    );
-
-    left += infoLine(
-        "Reg. No",
-        student.__registration
-    );
+    const className =
+        getMappedValue(
+            student,
+            "mapClass",
+            document.getElementById("colClass").value
+        );
 
 
-    right += infoLine(
-        "Cash",
-        currency + " " + (student.__cash || 0)
-    );
+    const cash =
+        student.__cash === ""
+        || student.__cash === undefined
+        ? 0
+        : student.__cash;
 
-    right += infoLine(
-        "Method",
-        student.__paymentMethod || "N/A"
-    );
 
-    right += infoLine(
-        "Date",
-        new Date().toLocaleDateString("en-GB")
-    );
+    let additionalHTML = "";
 
-    right += infoLine(
-        "Receipt No",
-        student.__registration
-    );
+    headers.forEach(h=>{
+
+        if(
+            h === document.getElementById("colName").value ||
+            h === document.getElementById("colPhone").value ||
+            h === document.getElementById("colClass").value ||
+            h === document.getElementById("colCash").value
+        ){
+
+            return;
+        }
+
+
+        const el =
+            document.getElementById(
+                "map_" + safeID(h)
+            );
+
+
+        if(
+            el &&
+            el.value &&
+            student[el.value] !== undefined &&
+            String(student[el.value]).trim() !== ""
+        ){
+
+            additionalHTML +=
+                infoLine(
+                    h,
+                    student[el.value]
+                );
+
+        }
+
+    });
 
 
     return `
+
     <div class="receipt">
 
         <div class="receipt-header">
@@ -1036,47 +1196,91 @@ function createReceiptHTML(student){
             ${
                 logoData
                 ?
-                `<img class="receipt-logo"
-                      src="${logoData}">`
+                `<img
+                    class="receipt-logo"
+                    src="${logoData}">
+                `
                 :
                 ""
             }
 
-            <h3>${escapeHTML(institute)}</h3>
+            <h3>
+                ${escapeHTML(institute)}
+            </h3>
 
-            <p>${escapeHTML(address)}</p>
+            <p>
+                ${escapeHTML(address)}
+            </p>
 
-            <p>${escapeHTML(phone)}</p>
+            <p>
+                ${escapeHTML(phone)}
+            </p>
 
-            <h3>${escapeHTML(title)}</h3>
+            <p class="receipt-title">
+                ${escapeHTML(title)}
+            </p>
 
         </div>
+
 
         <div class="receipt-main">
 
             <div class="info-column">
-                ${left}
+
+                <div class="info-heading">
+                    STUDENT INFORMATION
+                </div>
+
+                ${infoLine("Name",name)}
+                ${infoLine("Number",number)}
+                ${infoLine("Class",className)}
+                ${infoLine("Reg. No",student.__registration)}
+
             </div>
 
+
             <div class="info-column">
-                ${right}
+
+                <div class="info-heading">
+                    PAYMENT INFORMATION
+                </div>
+
+                ${infoLine(
+                    "Cash",
+                    currency + " " + cash
+                )}
+
+                ${infoLine(
+                    "Method",
+                    student.__paymentMethod || "N/A"
+                )}
+
+                ${infoLine(
+                    "Date",
+                    new Date().toLocaleDateString("en-GB")
+                )}
+
+                ${infoLine(
+                    "Receipt No",
+                    student.__registration
+                )}
+
             </div>
+
 
             <div>
 
                 <div class="photo-box">
-                    STUDENT<br>
-                    PHOTO
+                    STUDENT<br>PHOTO
                 </div>
 
                 ${
                     qrData
                     ?
-                    `<img src="${qrData}"
-                          style="width:70px;
-                          height:70px;
-                          object-fit:contain;
-                          margin-top:5px;">`
+                    `<img
+                        class="qr-preview-small"
+                        src="${qrData}">
+                    `
                     :
                     ""
                 }
@@ -1085,25 +1289,43 @@ function createReceiptHTML(student){
 
         </div>
 
+
+        ${
+            additionalHTML
+            ?
+            `<div class="receipt-extra">
+                ${additionalHTML}
+             </div>`
+            :
+            ""
+        }
+
+
         ${
             extra
             ?
-            `<div style="font-size:9px;margin-top:7px;">
+            `<div class="receipt-extra">
                 ${escapeHTML(extra)}
              </div>`
             :
             ""
         }
 
+
         <div class="receipt-footer">
 
-            <span>${escapeHTML(footer)}</span>
+            <span>
+                ${escapeHTML(footer)}
+            </span>
 
-            <span>Authorized Signature</span>
+            <span>
+                Authorized Signature
+            </span>
 
         </div>
 
     </div>
+
     `;
 }
 
@@ -1112,16 +1334,20 @@ function infoLine(label,value){
 
     return `
         <div class="info-line">
-            <strong>${escapeHTML(label)}:</strong>
+            <strong>
+                ${escapeHTML(label)}:
+            </strong>
             ${escapeHTML(value)}
         </div>
     `;
 }
 
 
-/* =========================
+/* ==========================================================
    RECEIPT PDF
-========================= */
+   4 RECEIPTS PER A4
+   WITH CUTTING GAP
+========================================================== */
 
 async function generateReceiptPDF(){
 
@@ -1131,7 +1357,9 @@ async function generateReceiptPDF(){
         return;
     }
 
+
     const {jsPDF} = window.jspdf;
+
 
     const pdf =
         new jsPDF({
@@ -1144,13 +1372,27 @@ async function generateReceiptPDF(){
     const pageWidth = 210;
     const pageHeight = 297;
 
-    const margin = 8;
+
+    /*
+       A4:
+       Top margin = 6mm
+       Receipt = 65mm
+       Cutting gap = 6mm
+       Bottom space automatically remains
+    */
+
+    const leftMargin = 7;
+    const topMargin = 6;
 
     const receiptWidth =
-        pageWidth - margin * 2;
+        pageWidth - leftMargin * 2;
 
-    const receiptHeight =
-        (pageHeight - margin * 2) / 4;
+    const receiptHeight = 65;
+
+    const cuttingGap = 6;
+
+    const slotHeight =
+        receiptHeight + cuttingGap;
 
 
     for(let i=0;i<students.length;i++){
@@ -1158,30 +1400,114 @@ async function generateReceiptPDF(){
         const position =
             i % 4;
 
+
         if(position === 0 && i !== 0){
 
             pdf.addPage();
 
         }
 
+
+        const y =
+            topMargin
+            + position * slotHeight;
+
+
         drawReceiptPDF(
             pdf,
             students[i],
-            margin,
-            margin + position * receiptHeight,
+            leftMargin,
+            y,
             receiptWidth,
             receiptHeight
         );
 
+
+        /*
+           Cutting line appears BELOW
+           every receipt except the last
+           receipt on the page.
+        */
+
+        if(position < 3){
+
+            drawCuttingLine(
+                pdf,
+                leftMargin,
+                y + receiptHeight + cuttingGap/2,
+                receiptWidth
+            );
+
+        }
+
     }
 
-    pdf.save("Money_Receipts.pdf");
+
+    pdf.save(
+        "Money_Receipts_4_Per_Page.pdf"
+    );
 }
 
 
 /* =========================
-   DRAW RECEIPT
+   CUTTING LINE
 ========================= */
+
+function drawCuttingLine(
+    pdf,
+    x,
+    y,
+    width
+){
+
+    pdf.setDrawColor(100);
+
+    pdf.setLineDashPattern(
+        [2,2],
+        0
+    );
+
+
+    pdf.line(
+        x+10,
+        y,
+        x+width-10,
+        y
+    );
+
+
+    pdf.setLineDashPattern(
+        [],
+        0
+    );
+
+
+    pdf.setFont(
+        "helvetica",
+        "normal"
+    );
+
+    pdf.setFontSize(7);
+
+
+    pdf.text(
+        "✂",
+        x+3,
+        y+2
+    );
+
+    pdf.text(
+        "CUT HERE",
+        x+width-3,
+        y+2,
+        {align:"right"}
+    );
+}
+
+
+/* ==========================================================
+   DRAW PDF RECEIPT
+========================================================== */
 
 function drawReceiptPDF(
     pdf,
@@ -1193,7 +1519,8 @@ function drawReceiptPDF(
 ){
 
     const currency =
-        document.getElementById("currency").value || "৳";
+        document.getElementById("currency").value
+        || "৳";
 
     const institute =
         document.getElementById("instituteName").value;
@@ -1207,18 +1534,35 @@ function drawReceiptPDF(
     const title =
         document.getElementById("receiptTitle").value;
 
+    const extra =
+        document.getElementById("extraText").value;
+
     const footer =
         document.getElementById("footerText").value;
 
 
-    pdf.setDrawColor(40);
+    /* =========================
+       OUTER BORDER
+    ========================= */
 
-    pdf.rect(x,y,w,h);
+    pdf.setDrawColor(30);
+
+    pdf.setLineWidth(.5);
+
+    pdf.rect(
+        x,
+        y,
+        w,
+        h
+    );
 
 
-    /* Header */
+    /* =========================
+       HEADER
+    ========================= */
 
-    let headerY = y + 7;
+    const headerTop = y + 4;
+
 
     if(logoData){
 
@@ -1228,95 +1572,90 @@ function drawReceiptPDF(
                 logoData,
                 "PNG",
                 x+4,
-                y+3,
-                14,
-                14
+                y+4,
+                13,
+                13
             );
 
-        }catch(e){}
+        }
+        catch(e){}
 
     }
 
 
+    pdf.setFont(
+        "helvetica",
+        "bold"
+    );
+
     pdf.setFontSize(12);
-    pdf.setFont("helvetica","bold");
+
 
     pdf.text(
         institute,
-        x + w/2,
-        headerY,
+        x+w/2,
+        headerTop+3,
         {align:"center"}
     );
 
-    pdf.setFontSize(7);
-    pdf.setFont("helvetica","normal");
+
+    pdf.setFont(
+        "helvetica",
+        "normal"
+    );
+
+    pdf.setFontSize(6.5);
+
 
     pdf.text(
         address,
-        x + w/2,
-        headerY+4,
+        x+w/2,
+        headerTop+7,
         {align:"center"}
     );
+
 
     pdf.text(
         phone,
-        x + w/2,
-        headerY+8,
+        x+w/2,
+        headerTop+10.5,
         {align:"center"}
     );
 
-    pdf.setFontSize(9);
-    pdf.setFont("helvetica","bold");
+
+    pdf.setFont(
+        "helvetica",
+        "bold"
+    );
+
+    pdf.setFontSize(8);
+
 
     pdf.text(
         title,
-        x + w/2,
-        headerY+14,
+        x+w/2,
+        headerTop+15,
         {align:"center"}
     );
 
 
+    /* =========================
+       HEADER LINE
+    ========================= */
+
+    pdf.setLineWidth(.25);
+
     pdf.line(
-        x+2,
-        y+20,
-        x+w-2,
-        y+20
-    );
-
-
-    /* Columns */
-
-    const colY = y+23;
-
-    const photoW = 28;
-
-    const infoW =
-        (w-photoW-8)/2;
-
-
-    pdf.rect(
         x+3,
-        colY,
-        infoW,
-        h-31
-    );
-
-    pdf.rect(
-        x+5+infoW,
-        colY,
-        infoW,
-        h-31
-    );
-
-    pdf.rect(
-        x+w-photoW-3,
-        colY,
-        photoW,
-        30
+        y+21,
+        x+w-3,
+        y+21
     );
 
 
-    pdf.setFontSize(7);
+    /* =========================
+       BASIC VALUES
+    ========================= */
 
     const nameCol =
         document.getElementById("mapName")
@@ -1334,122 +1673,249 @@ function drawReceiptPDF(
         : document.getElementById("colClass").value;
 
 
-    let yy = colY+6;
+    const name =
+        student[nameCol] || "N/A";
+
+    const number =
+        student[phoneCol] || "N/A";
+
+    const className =
+        student[classCol] || "N/A";
 
 
-    pdf.setFont("helvetica","bold");
+    /* =========================
+       COLUMN POSITION
+    ========================= */
 
-    pdf.text(
-        "Student Information",
-        x+5,
-        yy
+    const contentY =
+        y+24;
+
+    const photoW = 28;
+
+    const gap = 3;
+
+    const infoW =
+        (w - photoW - gap*4) / 2;
+
+
+    const firstX =
+        x+3;
+
+    const secondX =
+        firstX + infoW + gap;
+
+    const photoX =
+        secondX + infoW + gap;
+
+
+    const boxH = 30;
+
+
+    /* =========================
+       INFO BOXES
+    ========================= */
+
+    pdf.setLineWidth(.25);
+
+
+    pdf.rect(
+        firstX,
+        contentY,
+        infoW,
+        boxH
     );
 
-    pdf.setFont("helvetica","normal");
 
-    yy += 6;
-
-    pdf.text(
-        "Name: " +
-        String(student[nameCol] || "N/A"),
-        x+5,
-        yy
-    );
-
-    yy += 5;
-
-    pdf.text(
-        "Number: " +
-        String(student[phoneCol] || "N/A"),
-        x+5,
-        yy
-    );
-
-    yy += 5;
-
-    pdf.text(
-        "Class: " +
-        String(student[classCol] || "N/A"),
-        x+5,
-        yy
-    );
-
-    yy += 5;
-
-    pdf.text(
-        "Reg: " +
-        student.__registration,
-        x+5,
-        yy
+    pdf.rect(
+        secondX,
+        contentY,
+        infoW,
+        boxH
     );
 
 
-    /* Payment */
+    /* =========================
+       BOX HEADINGS
+    ========================= */
 
-    let py = colY+6;
+    pdf.setFont(
+        "helvetica",
+        "bold"
+    );
 
-    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(6.5);
+
 
     pdf.text(
-        "Payment Information",
-        x+7+infoW,
+        "STUDENT INFORMATION",
+        firstX+2,
+        contentY+5
+    );
+
+
+    pdf.text(
+        "PAYMENT INFORMATION",
+        secondX+2,
+        contentY+5
+    );
+
+
+    pdf.line(
+        firstX+1,
+        contentY+7,
+        firstX+infoW-1,
+        contentY+7
+    );
+
+
+    pdf.line(
+        secondX+1,
+        contentY+7,
+        secondX+infoW-1,
+        contentY+7
+    );
+
+
+    /* =========================
+       STUDENT DATA
+    ========================= */
+
+    pdf.setFont(
+        "helvetica",
+        "normal"
+    );
+
+    pdf.setFontSize(6.3);
+
+
+    let sy =
+        contentY+12;
+
+
+    pdf.text(
+        "Name: " + String(name),
+        firstX+2,
+        sy
+    );
+
+
+    sy += 5;
+
+
+    pdf.text(
+        "Number: " + String(number),
+        firstX+2,
+        sy
+    );
+
+
+    sy += 5;
+
+
+    pdf.text(
+        "Class: " + String(className),
+        firstX+2,
+        sy
+    );
+
+
+    sy += 5;
+
+
+    pdf.text(
+        "Reg No: " + student.__registration,
+        firstX+2,
+        sy
+    );
+
+
+    /* =========================
+       PAYMENT
+    ========================= */
+
+    let py =
+        contentY+12;
+
+
+    pdf.text(
+        "Cash: "
+        + currency
+        + " "
+        + String(student.__cash || 0),
+        secondX+2,
         py
     );
 
-    pdf.setFont("helvetica","normal");
-
-    py += 6;
-
-    pdf.text(
-        "Cash: " +
-        currency +
-        " " +
-        (student.__cash || 0),
-        x+7+infoW,
-        py
-    );
 
     py += 5;
 
+
     pdf.text(
-        "Method: " +
-        (student.__paymentMethod || "N/A"),
-        x+7+infoW,
+        "Method: "
+        + String(
+            student.__paymentMethod || "N/A"
+        ),
+        secondX+2,
         py
     );
+
 
     py += 5;
 
+
     pdf.text(
-        "Date: " +
-        new Date().toLocaleDateString("en-GB"),
-        x+7+infoW,
+        "Date: "
+        + new Date().toLocaleDateString("en-GB"),
+        secondX+2,
         py
     );
+
 
     py += 5;
 
+
     pdf.text(
-        "Receipt: " +
-        student.__registration,
-        x+7+infoW,
+        "Receipt: "
+        + student.__registration,
+        secondX+2,
         py
     );
 
 
-    /* Photo */
+    /* =========================
+       PHOTO BOX
+    ========================= */
 
-    pdf.setFontSize(6);
+    pdf.rect(
+        photoX,
+        contentY,
+        photoW,
+        25
+    );
+
+
+    pdf.setFontSize(5.5);
+
 
     pdf.text(
-        "STUDENT PHOTO",
-        x+w-photoW/2-3,
-        colY+16,
+        "STUDENT",
+        photoX+photoW/2,
+        contentY+11,
         {align:"center"}
     );
 
 
-    /* QR */
+    pdf.text(
+        "PHOTO",
+        photoX+photoW/2,
+        contentY+15,
+        {align:"center"}
+    );
+
+
+    /* =========================
+       QR
+    ========================= */
 
     if(qrData){
 
@@ -1458,39 +1924,80 @@ function drawReceiptPDF(
             pdf.addImage(
                 qrData,
                 "PNG",
-                x+w-photoW+1,
-                colY+33,
+                photoX+5,
+                contentY+27,
                 18,
                 18
             );
 
-        }catch(e){}
+        }
+        catch(e){}
 
     }
 
 
-    /* Footer */
+    /* =========================
+       EXTRA TEXT
+    ========================= */
 
-    pdf.setFontSize(6);
+    if(extra){
+
+        pdf.setFontSize(5.5);
+
+        pdf.text(
+            extra,
+            x+4,
+            y+57,
+            {
+                maxWidth:w-8
+            }
+        );
+
+    }
+
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    pdf.setLineWidth(.2);
+
+    pdf.line(
+        x+3,
+        y+h-8,
+        x+w-3,
+        y+h-8
+    );
+
+
+    pdf.setFontSize(5.5);
+
+    pdf.setFont(
+        "helvetica",
+        "normal"
+    );
+
 
     pdf.text(
         footer,
         x+4,
-        y+h-5
+        y+h-3
     );
+
 
     pdf.text(
         "Authorized Signature",
         x+w-4,
-        y+h-5,
+        y+h-3,
         {align:"right"}
     );
+
 }
 
 
-/* =========================
+/* ==========================================================
    ATTENDANCE PDF
-========================= */
+========================================================== */
 
 function generateAttendancePDF(){
 
@@ -1500,7 +2007,9 @@ function generateAttendancePDF(){
         return;
     }
 
+
     const {jsPDF} = window.jspdf;
+
 
     const pdf =
         new jsPDF({
@@ -1522,6 +2031,7 @@ function generateAttendancePDF(){
 
 
     y = 35;
+
 
     const columns = [
         "SL",
@@ -1550,9 +2060,15 @@ function generateAttendancePDF(){
     function drawTableHeader(){
 
         pdf.setFontSize(7);
-        pdf.setFont("helvetica","bold");
+
+        pdf.setFont(
+            "helvetica",
+            "bold"
+        );
+
 
         let x = margin;
+
 
         columns.forEach((col,i)=>{
 
@@ -1563,6 +2079,7 @@ function generateAttendancePDF(){
                 8
             );
 
+
             pdf.text(
                 col,
                 x+widths[i]/2,
@@ -1570,13 +2087,19 @@ function generateAttendancePDF(){
                 {align:"center"}
             );
 
+
             x += widths[i];
 
         });
 
+
         y += 8;
 
-        pdf.setFont("helvetica","normal");
+        pdf.setFont(
+            "helvetica",
+            "normal"
+        );
+
     }
 
 
@@ -1606,21 +2129,29 @@ function generateAttendancePDF(){
                 ["School","school"]
             );
 
+
         const schoolRoll =
             getStudentField(
                 student,
-                ["School Roll","SchoolRoll","Roll"]
+                [
+                    "School Roll",
+                    "SchoolRoll",
+                    "Roll"
+                ]
             );
+
 
         const nameCol =
             document.getElementById("mapName")
             ? document.getElementById("mapName").value
             : document.getElementById("colName").value;
 
+
         const phoneCol =
             document.getElementById("mapPhone")
             ? document.getElementById("mapPhone").value
             : document.getElementById("colPhone").value;
+
 
         const classCol =
             document.getElementById("mapClass")
@@ -1651,7 +2182,9 @@ function generateAttendancePDF(){
 
         let x = margin;
 
+
         pdf.setFontSize(6.5);
+
 
         values.forEach((value,i)=>{
 
@@ -1662,22 +2195,27 @@ function generateAttendancePDF(){
                 8
             );
 
+
             pdf.text(
                 String(value),
                 x+2,
                 y+5
             );
 
+
             x += widths[i];
 
         });
+
 
         y += 8;
 
     });
 
 
-    pdf.save("Attendance_Sheet.pdf");
+    pdf.save(
+        "Attendance_Sheet.pdf"
+    );
 }
 
 
@@ -1690,9 +2228,14 @@ function drawAttendanceHeader(pdf){
     const institute =
         document.getElementById("instituteName").value;
 
-    pdf.setFont("helvetica","bold");
+
+    pdf.setFont(
+        "helvetica",
+        "bold"
+    );
 
     pdf.setFontSize(14);
+
 
     pdf.text(
         institute,
@@ -1701,7 +2244,9 @@ function drawAttendanceHeader(pdf){
         {align:"center"}
     );
 
+
     pdf.setFontSize(10);
+
 
     pdf.text(
         "ATTENDANCE SHEET",
@@ -1710,9 +2255,14 @@ function drawAttendanceHeader(pdf){
         {align:"center"}
     );
 
-    pdf.setFont("helvetica","normal");
+
+    pdf.setFont(
+        "helvetica",
+        "normal"
+    );
 
     pdf.setFontSize(7);
+
 
     pdf.text(
         new Date().toLocaleDateString("en-GB"),
@@ -1720,6 +2270,7 @@ function drawAttendanceHeader(pdf){
         25,
         {align:"center"}
     );
+
 }
 
 
@@ -1752,12 +2303,15 @@ function getStudentField(student,names){
 
 function escapeHTML(value){
 
-    if(value === undefined ||
-       value === null){
+    if(
+        value === undefined ||
+        value === null
+    ){
 
         return "";
 
     }
+
 
     return String(value)
         .replace(/&/g,"&amp;")
