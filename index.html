@@ -201,16 +201,27 @@ th{
 
 .receipt-watermark{
     position:absolute;
-    left:50%;
-    top:57%;
-    transform:translate(-50%,-50%) rotate(-18deg);
-    font-size:26px;
-    font-weight:bold;
-    letter-spacing:1px;
-    color:rgba(24,59,115,.075);
-    white-space:nowrap;
+    inset:-35px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:25px;
+    font-weight:800;
+    letter-spacing:1.5px;
+    line-height:3.2;
+    color:rgba(24,59,115,.055);
+    white-space:pre-wrap;
     pointer-events:none;
     z-index:0;
+    transform:rotate(-22deg) scale(1.15);
+    background-image:repeating-linear-gradient(
+        -22deg,
+        transparent 0,
+        transparent 72px,
+        rgba(24,59,115,.035) 73px,
+        rgba(24,59,115,.035) 74px
+    );
 }
 
 .receipt > *:not(.receipt-watermark){
@@ -301,13 +312,26 @@ th{
 }
 
 .receipt-footer{
-    margin-top:6px;
+    margin-top:4px;
     border-top:1px solid #333;
-    padding-top:5px;
-    font-size:8px;
+    padding-top:3px;
+    font-size:7.5px;
     display:flex;
     justify-content:space-between;
-    gap:10px;
+    align-items:flex-end;
+    gap:8px;
+}
+
+.receipt-signature{
+    min-width:105px;
+    text-align:center;
+    padding-top:3px;
+}
+
+.receipt-signature-line{
+    border-top:1px solid #444;
+    padding-top:2px;
+    font-size:7px;
 }
 
 .receipt-meta{
@@ -1243,8 +1267,6 @@ function createReceiptHTML(student,index=0){
                 <div class="info-heading">STUDENT INFORMATION</div>
                 ${infoLine("Name",name)}
                 ${infoLine("Number",number)}
-                ${infoLine("Class",className)}
-                ${infoLine("Reg. No",student.__registration)}
             </div>
 
             <div class="info-column">
@@ -1279,7 +1301,9 @@ function createReceiptHTML(student,index=0){
 
         <div class="receipt-footer">
             <span>${escapeHTML(footer)}</span>
-            <span>Authorized Signature</span>
+            <span class="receipt-signature">
+                <span class="receipt-signature-line">Authorized Signature</span>
+            </span>
         </div>
 
     </div>
@@ -1520,17 +1544,21 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     pdf.setFillColor(255,255,255);
     pdf.roundedRect(x,y,w,h,1.5,1.5,"FD");
 
-    /* WATERMARK */
+    /* FULL RECEIPT WATERMARK */
     pdf.saveGraphicsState();
     pdf.setTextColor(235,238,245);
     pdf.setFont("helvetica","bold");
-    pdf.setFontSize(17);
-    pdf.text(
-        watermark,
-        x+w/2,
-        y+h/2+4,
-        {align:"center",angle:18}
-    );
+    pdf.setFontSize(13);
+    for(let wy=y+18; wy<y+h-4; wy+=19){
+        for(let wx=x-12; wx<x+w+18; wx+=55){
+            pdf.text(
+                watermark,
+                wx,
+                wy,
+                {align:"center",angle:22}
+            );
+        }
+    }
     pdf.restoreGraphicsState();
 
     /* HEADER */
@@ -1611,7 +1639,7 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     const firstX = x+3;
     const secondX = firstX+infoW+gap;
     const qrX = secondX+infoW+gap;
-    const boxH = 30;
+    const boxH = 27;
 
     pdf.setLineWidth(.25);
     pdf.setDrawColor(90);
@@ -1650,16 +1678,7 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     );
     sy += 5;
 
-    pdf.text(
-        "Class: " + String(className),
-        firstX+2,sy,{maxWidth:infoW-4}
-    );
-    sy += 5;
-
-    pdf.text(
-        "Reg No: " + regNo,
-        firstX+2,sy,{maxWidth:infoW-4}
-    );
+    /* Class and registration are already shown in the top metadata box. */
 
     /* PAYMENT DATA */
     let py = contentY+11;
@@ -1762,33 +1781,35 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     pdf.setFontSize(5.2);
 
     if(additionalText){
-        pdf.text(additionalText,x+4,y+56,{maxWidth:w-8});
+        pdf.text(additionalText,x+4,y+53,{maxWidth:w-8});
     }
 
     if(extra){
-        pdf.text(extra,x+4,y+60,{maxWidth:w-8});
+        pdf.text(extra,x+4,y+57,{maxWidth:w-8});
     }
 
     /* FOOTER */
     pdf.setDrawColor(100);
     pdf.setLineWidth(.2);
-    pdf.line(x+3,y+h-8,x+w-3,y+h-8);
+    pdf.line(x+3,y+h-8.5,x+w-3,y+h-8.5);
 
     pdf.setTextColor(50);
     pdf.setFont("helvetica","normal");
-    pdf.setFontSize(5.2);
+    pdf.setFontSize(5.0);
 
     pdf.text(
         footer,
-        x+4,y+h-3,
+        x+4,y+h-3.2,
         {maxWidth:w*.58}
     );
 
     pdf.setFont("helvetica","bold");
+    pdf.line(x+w-42,y+h-4.8,x+w-4,y+h-4.8);
+    pdf.setFontSize(4.8);
     pdf.text(
         "Authorized Signature",
-        x+w-4,y+h-3,
-        {align:"right"}
+        x+w-23,y+h-2.2,
+        {align:"center"}
     );
 }
 
