@@ -319,7 +319,7 @@ th{
     row-gap:2px;
 }
 .info-line{
-    font-size:7.5px;
+    font-size:8.5px;
     margin:0;
     padding:2px 0;
     line-height:1.25;
@@ -393,7 +393,7 @@ th{
     display:block;
     border-top:1px solid #34485f;
     padding-top:2px;
-    font-size:6.5px;
+    font-size:7px;
     color:#253c58;
 }
 
@@ -1618,11 +1618,11 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     fields.push(["Reg. No",String(regNo)]);
     if(fields.length===1) fields.unshift(["Name",String(name)],["Number",String(number)],["Class",String(className)]);
 
-    pdf.setTextColor(35); pdf.setFont("helvetica","normal"); pdf.setFontSize(4.6);
+    pdf.setTextColor(35); pdf.setFont("helvetica","normal"); pdf.setFontSize(5.1);
     const rows=Math.min(fields.length,8);
     const leftInner=firstX+2, half=(infoW-5)/2;
     for(let i=0;i<rows;i++){
-        const col=i%2, row=Math.floor(i/2), fx=leftInner+col*half, fy=contentY+8+row*4.3;
+        const col=i%2, row=Math.floor(i/2), fx=leftInner+col*half, fy=contentY+8+row*4.0;
         const label=fields[i][0], val=fields[i][1];
         pdf.setFont("helvetica","bold"); pdf.setTextColor(24,59,115); pdf.text(String(label)+":",fx,fy,{maxWidth:half*.36});
         pdf.setFont("helvetica","normal"); pdf.setTextColor(35); pdf.text(String(val),fx+half*.37,fy,{maxWidth:half*.61});
@@ -1785,11 +1785,15 @@ function generateAttendancePDF(){
         }
 
 
+        // Use the Excel School column (or mapped School column) exactly as entered.
+        const schoolMap = document.getElementById("map_" + safeID("School"));
         const school =
-            getStudentField(
-                student,
-                ["School","school"]
-            );
+            (schoolMap && schoolMap.value && student[schoolMap.value] !== undefined
+                ? student[schoolMap.value]
+                : getStudentField(student,[
+                    "School", "school", "School Name", "SchoolName",
+                    "Institution", "College", "Institute"
+                  ]));
 
 
         const schoolRoll =
@@ -1942,17 +1946,25 @@ function drawAttendanceHeader(pdf){
 
 function getStudentField(student,names){
 
+    // First try exact header names.
     for(const name of names){
-
-        if(
-            student[name] !== undefined &&
-            String(student[name]).trim() !== ""
-        ){
-
+        if(student[name] !== undefined && String(student[name]).trim() !== ""){
             return student[name];
-
         }
+    }
 
+    // Then match Excel headers case-insensitively and ignoring spaces/_/- .
+    const normalize = v => String(v ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_\-]+/g, "");
+
+    const wanted = names.map(normalize);
+    for(const key of Object.keys(student)){
+        const nk = normalize(key);
+        if(wanted.includes(nk) && String(student[key] ?? "").trim() !== ""){
+            return student[key];
+        }
     }
 
     return "";
