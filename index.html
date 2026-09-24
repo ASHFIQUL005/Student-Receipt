@@ -237,7 +237,7 @@ th{
     margin-bottom:5px;
     position:relative;
     display:grid;
-    grid-template-columns:55px 1fr 150px;
+    grid-template-columns:65px 1fr 150px;
     align-items:center;
     gap:8px;
 }
@@ -380,7 +380,7 @@ th{
     padding-top:4px;
     font-size:7px;
     display:grid;
-    grid-template-columns:1fr 135px;
+    grid-template-columns:1fr 155px;
     align-items:end;
     gap:8px;
 }
@@ -1565,7 +1565,7 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
 
     // Header
     const headerY=y+3.2;
-    if(logoData){ try{ pdf.addImage(logoData,getImageFormat(logoData),x+4,headerY,12,12); }catch(e){} }
+    if(logoData){ try{ pdf.addImage(logoData,getImageFormat(logoData),x+3.5,headerY-1,16,16); }catch(e){} }
     const metaW=39, metaX=x+w-metaW-3;
     const centerX=x+(w-metaW-12)/2+4;
     pdf.setTextColor(20,50,90); pdf.setFont("helvetica","bold"); pdf.setFontSize(9.4);
@@ -1652,9 +1652,9 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     pdf.setDrawColor(180); pdf.setLineWidth(.2); pdf.line(x+3,y+h-8.2,x+w-3,y+h-8.2);
     pdf.setTextColor(65); pdf.setFont("helvetica","normal"); pdf.setFontSize(4.4);
     pdf.text(footer,x+4,y+h-3.2,{maxWidth:w*.62});
-    pdf.setDrawColor(60); pdf.line(x+w-40,y+h-5.2,x+w-4,y+h-5.2);
+    pdf.setDrawColor(60); pdf.line(x+w-48,y+h-5.2,x+w-4,y+h-5.2);
     pdf.setTextColor(45); pdf.setFont("helvetica","bold"); pdf.setFontSize(4.4);
-    pdf.text("Authorized Signature",x+w-22,y+h-2.4,{align:"center"});
+    pdf.text("Authorized Signature",x+w-26,y+h-2.4,{align:"center"});
 }
 
 /* ==========================================================
