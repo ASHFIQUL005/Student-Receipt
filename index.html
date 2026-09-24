@@ -242,10 +242,13 @@ th{
     gap:8px;
 }
 .receipt-logo{
-    width:48px;
-    height:48px;
+    width:auto;
+    height:auto;
+    max-width:58px;
+    max-height:58px;
     object-fit:contain;
     margin:0 auto;
+    display:block;
 }
 .receipt-header-center{text-align:center;}
 .receipt-header h3{
@@ -971,6 +974,29 @@ function createReceiptNumber(index){
 
 
 /* =========================
+   REFRESH GENERATED NUMBERS
+========================= */
+
+function refreshGeneratedNumbers(){
+
+    if(students.length === 0) return;
+
+    students.forEach((student,index)=>{
+
+        student.__registration =
+            createRegistration(index);
+
+        student.__receiptNo =
+            createReceiptNumber(index);
+
+    });
+
+    showDataPreview();
+    showReceiptPreview();
+}
+
+
+/* =========================
    DATA PREVIEW
 ========================= */
 
@@ -1249,8 +1275,8 @@ function createReceiptHTML(student,index=0){
     const number = student[phoneCol] ?? "N/A";
     const className = student[classCol] ?? "N/A";
     const cash = student.__cash === "" || student.__cash === undefined ? 0 : student.__cash;
-    const receiptNo = student.__receiptNo || createReceiptNumber(index);
-    const regNo = student.__registration || "N/A";
+    const receiptNo = createReceiptNumber(index);
+    const regNo = createRegistration(index);
 
     // Put ALL Excel columns (except Cash) inside Student Details, so the receipt follows the Excel data.
     const studentFields = [];
@@ -1542,8 +1568,8 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     const name = student[nameCol] ?? "N/A";
     const number = student[phoneCol] ?? "N/A";
     const className = student[classCol] ?? "N/A";
-    const receiptNo = student.__receiptNo || createReceiptNumber(index);
-    const regNo = student.__registration || "N/A";
+    const receiptNo = createReceiptNumber(index);
+    const regNo = createRegistration(index);
     const cash = student.__cash === "" || student.__cash === undefined ? 0 : student.__cash;
     const cashNum = Number(String(cash).replace(/[^0-9.]/g,"")) || 0;
 
@@ -1565,7 +1591,30 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
 
     // Header
     const headerY=y+3.2;
-    if(logoData){ try{ pdf.addImage(logoData,getImageFormat(logoData),x+3.5,headerY-1,16,16); }catch(e){} }
+    if(logoData){
+        try{
+            const imgProps = pdf.getImageProperties(logoData);
+            const maxLogoW = 16;
+            const maxLogoH = 14;
+            const ratio = imgProps.width / imgProps.height;
+            let logoW = maxLogoW;
+            let logoH = logoW / ratio;
+
+            if(logoH > maxLogoH){
+                logoH = maxLogoH;
+                logoW = logoH * ratio;
+            }
+
+            pdf.addImage(
+                logoData,
+                getImageFormat(logoData),
+                x+3.5,
+                headerY-1,
+                logoW,
+                logoH
+            );
+        }catch(e){}
+    }
     const metaW=39, metaX=x+w-metaW-3;
     const centerX=x+(w-metaW-12)/2+4;
     pdf.setTextColor(20,50,90); pdf.setFont("helvetica","bold"); pdf.setFontSize(9.4);
@@ -1938,6 +1987,22 @@ function drawAttendanceHeader(pdf){
     );
 
 }
+
+
+/* =========================
+   FIND FIELD
+========================= */
+
+["regPrefix","receiptPrefix","regStart"].forEach(id=>{
+
+    const input = document.getElementById(id);
+
+    if(input){
+        input.addEventListener("input",refreshGeneratedNumbers);
+        input.addEventListener("change",refreshGeneratedNumbers);
+    }
+
+});
 
 
 /* =========================
