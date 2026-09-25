@@ -1249,8 +1249,8 @@ function createReceiptHTML(student,index=0){
     const number = student[phoneCol] ?? "N/A";
     const className = student[classCol] ?? "N/A";
     const cash = student.__cash === "" || student.__cash === undefined ? 0 : student.__cash;
-    const receiptNo = student.__receiptNo || createReceiptNumber(index);
-    const regNo = student.__registration || "N/A";
+    const receiptNo = createReceiptNumber(index);
+    const regNo = createRegistration(index);
 
     // Put ALL Excel columns (except Cash) inside Student Details, so the receipt follows the Excel data.
     const studentFields = [];
@@ -1542,8 +1542,8 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     const name = student[nameCol] ?? "N/A";
     const number = student[phoneCol] ?? "N/A";
     const className = student[classCol] ?? "N/A";
-    const receiptNo = student.__receiptNo || createReceiptNumber(index);
-    const regNo = student.__registration || "N/A";
+    const receiptNo = createReceiptNumber(index);
+    const regNo = createRegistration(index);
     const cash = student.__cash === "" || student.__cash === undefined ? 0 : student.__cash;
     const cashNum = Number(String(cash).replace(/[^0-9.]/g,"")) || 0;
 
@@ -1568,22 +1568,22 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     if(logoData){ try{ pdf.addImage(logoData,getImageFormat(logoData),x+3.5,headerY-1,16,16); }catch(e){} }
     const metaW=39, metaX=x+w-metaW-3;
     const centerX=x+(w-metaW-12)/2+4;
-    pdf.setTextColor(20,50,90); pdf.setFont("helvetica","bold"); pdf.setFontSize(9.4);
+    pdf.setTextColor(20,50,90); pdf.setFont("helvetica","bold"); pdf.setFontSize(11);
     pdf.text(institute,centerX,headerY+3,{align:"center",maxWidth:125});
-    pdf.setFont("helvetica","normal"); pdf.setFontSize(5.0);
+    pdf.setFont("helvetica","normal"); pdf.setFontSize(6.2);
     pdf.text(address,centerX,headerY+6.6,{align:"center",maxWidth:125});
     pdf.text(phone,centerX,headerY+9.5,{align:"center",maxWidth:125});
-    pdf.setFont("helvetica","bold"); pdf.setFontSize(6.6);
+    pdf.setFont("helvetica","bold"); pdf.setFontSize(8);
     pdf.text(title,centerX,headerY+13,{align:"center",maxWidth:125});
 
     // MONEY RECEIPT title and numbers on the right
     pdf.setFillColor(24,59,115); pdf.roundedRect(metaX,y+3.2,metaW,7,1.2,1.2,"F");
-    pdf.setTextColor(255,255,255); pdf.setFontSize(7.5);
+    pdf.setTextColor(255,255,255); pdf.setFontSize(8.5);
     pdf.text("MONEY RECEIPT",metaX+metaW/2,y+7.7,{align:"center"});
     pdf.setDrawColor(130,150,180); pdf.setFillColor(250,252,255); pdf.setLineWidth(.22);
     pdf.roundedRect(metaX,y+11,metaW,5.5,.8,.8,"FD");
     pdf.roundedRect(metaX,y+16.5,metaW,5.5,.8,.8,"FD");
-    pdf.setTextColor(30,55,85); pdf.setFont("helvetica","normal"); pdf.setFontSize(4.5);
+    pdf.setTextColor(30,55,85); pdf.setFont("helvetica","normal"); pdf.setFontSize(6.5);
     pdf.text("RECEIPT NO.",metaX+2,y+14.5); pdf.text(receiptNo,metaX+metaW-2,y+14.5,{align:"right"});
     pdf.text("REGISTRATION NO.",metaX+2,y+20); pdf.text(regNo,metaX+metaW-2,y+20,{align:"right"});
 
@@ -1601,10 +1601,10 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
 
     // Section headings
     pdf.setFillColor(24,59,115); pdf.roundedRect(firstX,contentY,infoW,5,1,1,"F"); pdf.roundedRect(secondX,contentY,infoW,5,1,1,"F");
-    pdf.setTextColor(255,255,255); pdf.setFont("helvetica","bold"); pdf.setFontSize(5.7);
+    pdf.setTextColor(255,255,255); pdf.setFont("helvetica","bold"); pdf.setFontSize(6.5);
     pdf.text("STUDENT DETAILS",firstX+2,contentY+3.5);
     pdf.text("PAYMENT INFORMATION",secondX+2,contentY+3.5);
-    pdf.setTextColor(24,59,115); pdf.setFontSize(5.7); pdf.text("QR CODE",qrX+qrW/2,contentY+3.5,{align:"center"});
+    pdf.setTextColor(24,59,115); pdf.setFontSize(6.5); pdf.text("QR CODE",qrX+qrW/2,contentY+3.5,{align:"center"});
 
     // All Excel fields appear in Student Details.
     const fields=[];
@@ -1618,7 +1618,7 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
     fields.push(["Reg. No",String(regNo)]);
     if(fields.length===1) fields.unshift(["Name",String(name)],["Number",String(number)],["Class",String(className)]);
 
-    pdf.setTextColor(35); pdf.setFont("helvetica","normal"); pdf.setFontSize(5.1);
+    pdf.setTextColor(35); pdf.setFont("helvetica","normal"); pdf.setFontSize(6.0);
     const rows=Math.min(fields.length,8);
     const leftInner=firstX+2, half=(infoW-5)/2;
     for(let i=0;i<rows;i++){
@@ -1630,30 +1630,30 @@ function drawReceiptPDF(pdf,student,x,y,w,h,index=0){
 
     // Payment area
     pdf.setFillColor(237,245,255); pdf.roundedRect(secondX+2,contentY+7,infoW-4,7,1,1,"F");
-    pdf.setTextColor(24,59,115); pdf.setFont("helvetica","bold"); pdf.setFontSize(5.1);
+    pdf.setTextColor(24,59,115); pdf.setFont("helvetica","bold"); pdf.setFontSize(6.0);
     pdf.text("CASH RECEIVED",secondX+4,contentY+11.2);
-    pdf.setFontSize(8.4); pdf.text(currency+" "+String(cash),secondX+infoW-4,contentY+11.5,{align:"right"});
-    pdf.setFont("helvetica","normal"); pdf.setFontSize(5.0); pdf.setTextColor(35);
+    pdf.setFontSize(10); pdf.text(currency+" "+String(cash),secondX+infoW-4,contentY+11.5,{align:"right"});
+    pdf.setFont("helvetica","normal"); pdf.setFontSize(6.2); pdf.setTextColor(35);
     pdf.text("Payment Method",secondX+3,contentY+18); pdf.text(": "+String(student.__paymentMethod||"N/A"),secondX+22,contentY+18,{maxWidth:infoW-25});
     pdf.text("Payment Status",secondX+3,contentY+22); pdf.setFont("helvetica","bold"); pdf.text(": "+(cashNum>0?"PAID":"N/A"),secondX+22,contentY+22);
     pdf.setFont("helvetica","normal"); pdf.text("Date",secondX+3,contentY+26); pdf.text(": "+new Date().toLocaleDateString("en-GB"),secondX+22,contentY+26);
 
     // Fixed QR box
     if(qrData){ try{ const q=20; pdf.addImage(qrData,getImageFormat(qrData),qrX+(qrW-q)/2,contentY+6,q,q); }catch(e){} }
-    pdf.setTextColor(90); pdf.setFont("helvetica","normal"); pdf.setFontSize(4.4); pdf.text("Scan for Verification",qrX+qrW/2,contentY+25.2,{align:"center"});
+    pdf.setTextColor(90); pdf.setFont("helvetica","normal"); pdf.setFontSize(5.3); pdf.text("Scan for Verification",qrX+qrW/2,contentY+25.2,{align:"center"});
 
     // Extra text, if supplied
     if(extra){
-        pdf.setTextColor(55); pdf.setFontSize(4.6);
+        pdf.setTextColor(55); pdf.setFontSize(5.4);
         pdf.text(extra,x+4,y+56,{maxWidth:w-8});
     }
 
     // Compact professional footer/signature
     pdf.setDrawColor(180); pdf.setLineWidth(.2); pdf.line(x+3,y+h-8.2,x+w-3,y+h-8.2);
-    pdf.setTextColor(65); pdf.setFont("helvetica","normal"); pdf.setFontSize(4.4);
+    pdf.setTextColor(65); pdf.setFont("helvetica","normal"); pdf.setFontSize(5.3);
     pdf.text(footer,x+4,y+h-3.2,{maxWidth:w*.62});
     pdf.setDrawColor(60); pdf.line(x+w-48,y+h-5.2,x+w-4,y+h-5.2);
-    pdf.setTextColor(45); pdf.setFont("helvetica","bold"); pdf.setFontSize(4.4);
+    pdf.setTextColor(45); pdf.setFont("helvetica","bold"); pdf.setFontSize(5.3);
     pdf.text("Authorized Signature",x+w-26,y+h-2.4,{align:"center"});
 }
 
@@ -1829,7 +1829,7 @@ function generateAttendancePDF(){
 
             index+1,
 
-            student.__registration,
+            createRegistration(index),
 
             student[nameCol] || "N/A",
 
